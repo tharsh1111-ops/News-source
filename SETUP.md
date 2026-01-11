@@ -9,12 +9,12 @@ This guide explains how to set up and push your code to a GitHub repository.
 Open your terminal (or Command Prompt on Windows) and navigate to your project folder:
 
 ```bash
-cd "C:\Users\thars\OneDrive\Desktop\agentic ai\github\visual studio\test app"
+cd "C:\Users\<username>\path\to\your\project"
 ```
 
 **Note:** On Windows, you can also use forward slashes:
 ```bash
-cd "C:/Users/thars/OneDrive/Desktop/agentic ai/github/visual studio/test app"
+cd "C:/Users/<username>/path/to/your/project"
 ```
 
 ### 2. Check Repository Status
@@ -68,7 +68,7 @@ Replace:
 
 **Example:**
 ```bash
-git remote add origin https://github.com/tharsh1111-ops/News-source.git
+git remote add origin https://github.com/<your-username>/News-source.git
 ```
 
 ### 6. Push to Remote Repository

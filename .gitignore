@@ -51,7 +51,6 @@ build/
 *.ear
 target/
 .gradle/
-build/
 
 # Environment Variables
 .env
@@ -68,6 +67,4 @@ temp/
 *.tmp
 
 # Build Output
-dist/
-build/
 out/
