@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Global News — Top Stories & Search</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Global News</h1>
+
+      <section id="controls">
+        <input id="q" placeholder="Search keywords or leave empty for top stories" />
+        <select id="country">
+          <option value="">All (global)</option>
+          <option value="us">United States</option>
+          <option value="gb">United Kingdom</option>
+          <option value="de">Germany</option>
+          <option value="fr">France</option>
+          <option value="jp">Japan</option>
+        </select>
+        <button id="searchBtn">Search</button>
+        <button id="topBtn">Top Stories</button>
+      </section>
+
+      <section id="results"></section>
+    </main>
+
+    <script src="/static/main.js"></script>
+  </body>
+  </html>

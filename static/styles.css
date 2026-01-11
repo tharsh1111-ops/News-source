@@ -1,0 +1,9 @@
+body{font-family:Arial,Helvetica,sans-serif;margin:20px;background:#f7f7f7}
+main{max-width:900px;margin:0 auto;background:white;padding:20px;border-radius:6px}
+h1{margin-top:0}
+#controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+#controls input{flex:1;padding:8px}
+#controls select, #controls button{padding:8px}
+.article{border-top:1px solid #eee;padding:12px 0}
+.article img{max-width:200px;float:right;margin-left:12px}
+.meta{color:#666;font-size:12px;margin-bottom:6px}
