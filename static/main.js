@@ -92,15 +92,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('openSourceBtn').addEventListener('click', async () => {
       const category = catEl.value;
-      const source = srcEl.value;
       const q = document.getElementById('q').value.trim() || '';
+      const selected = Array.from(srcEl.selectedOptions).map(o => o.value);
+      if (!selected.length) {
+        alert('Please select one or more sources.');
+        return;
+      }
       try {
-        const res = await fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(source)}&q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        if (data.url) window.open(data.url, '_blank', 'noopener');
+        // fetch each source URL and open in a new tab
+        const promises = selected.map(s =>
+          fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(s)}&q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        for (const res of results) {
+          if (res && res.url) window.open(res.url, '_blank', 'noopener');
+        }
       } catch (e) {
-        console.error('Error opening source search', e);
-        alert('Could not open source search');
+        console.error('Error opening source searches', e);
+        alert('Could not open one or more source searches');
       }
     });
   } catch (e) {
