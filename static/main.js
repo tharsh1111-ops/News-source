@@ -107,3 +107,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Failed to load sources', e);
   }
 });
+
+// DPI / UI scaling: set base font-size according to devicePixelRatio and user slider
+function applyDPIScaling() {
+  const dpr = window.devicePixelRatio || 1;
+  // base 16px scaled by device pixel ratio (clamped)
+  const base = Math.max(12, Math.min(24, 16 * dpr));
+  document.documentElement.style.setProperty('--base-font-size', base + 'px');
+}
+
+applyDPIScaling();
+
+const scaleEl = document.getElementById('uiScale');
+const scaleLabel = document.getElementById('uiScaleLabel');
+if (scaleEl) {
+  scaleEl.addEventListener('input', () => {
+    const pct = Number(scaleEl.value);
+    scaleLabel.textContent = pct + '%';
+    const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--base-font-size')) || 16;
+    const newBase = (base * pct) / 100;
+    document.documentElement.style.setProperty('--base-font-size', newBase + 'px');
+  });
+}
+
+// update scaling if devicePixelRatio changes (some displays support change)
+window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener?.('change', applyDPIScaling);

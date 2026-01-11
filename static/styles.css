@@ -1,9 +1,30 @@
-body{font-family:Arial,Helvetica,sans-serif;margin:20px;background:#f7f7f7}
-main{max-width:900px;margin:0 auto;background:white;padding:20px;border-radius:6px}
+:root{
+	--base-font-size:16px;
+	--max-width:900px;
+}
+
+html{font-size:var(--base-font-size)}
+body{font-family:Arial,Helvetica,sans-serif;margin:1.25rem;background:#f7f7f7}
+main{max-width:var(--max-width);margin:0 auto;background:white;padding:1.25rem;border-radius:0.375rem}
 h1{margin-top:0}
-#controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-#controls input{flex:1;padding:8px}
-#controls select, #controls button{padding:8px}
-.article{border-top:1px solid #eee;padding:12px 0}
-.article img{max-width:200px;float:right;margin-left:12px}
-.meta{color:#666;font-size:12px;margin-bottom:6px}
+#controls{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap}
+#controls input{flex:1;padding:0.5rem}
+#controls select, #controls button{padding:0.5rem}
+.article{border-top:1px solid #eee;padding:0.75rem 0}
+.article img{max-width:12.5rem;float:right;margin-left:0.75rem}
+.meta{color:#666;font-size:0.75rem;margin-bottom:0.375rem}
+
+/* DPI-aware image handling */
+@media (min-resolution:2dppx){
+	.article img{max-width:14rem}
+}
+
+/* small screens */
+@media (max-width:640px){
+	main{padding:1rem}
+	.article img{float:none;display:block;margin:0.5rem 0}
+}
+
+/* user scale control */
+.scale-control{display:inline-flex;gap:0.5rem;align-items:center}
+.scale-control input[type="range"]{width:8rem}
