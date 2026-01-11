@@ -11,6 +11,11 @@ async function fetchSearch(q) {
   return res.json();
 }
 
+async function fetchSources() {
+  const res = await fetch('/api/sources');
+  return res.json();
+}
+
 function renderArticles(container, articles) {
   container.innerHTML = '';
   if (!articles || articles.length === 0) {
@@ -57,4 +62,48 @@ document.getElementById('topBtn').addEventListener('click', async () => {
 });
 
 // Load top stories on first load
-document.addEventListener('DOMContentLoaded', () => document.getElementById('topBtn').click());
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('topBtn').click();
+  // populate sources
+  try {
+    const sources = await fetchSources();
+    const catEl = document.getElementById('sourceCategory');
+    const srcEl = document.getElementById('sourceSelect');
+    catEl.innerHTML = '';
+    for (const cat of Object.keys(sources)) {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      catEl.appendChild(opt);
+    }
+    function populateSourcesForCategory() {
+      const cat = catEl.value;
+      const list = sources[cat] || [];
+      srcEl.innerHTML = '';
+      for (const s of list) {
+        const o = document.createElement('option');
+        o.value = s;
+        o.textContent = s;
+        srcEl.appendChild(o);
+      }
+    }
+    catEl.addEventListener('change', populateSourcesForCategory);
+    populateSourcesForCategory();
+
+    document.getElementById('openSourceBtn').addEventListener('click', async () => {
+      const category = catEl.value;
+      const source = srcEl.value;
+      const q = document.getElementById('q').value.trim() || '';
+      try {
+        const res = await fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(source)}&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (data.url) window.open(data.url, '_blank', 'noopener');
+      } catch (e) {
+        console.error('Error opening source search', e);
+        alert('Could not open source search');
+      }
+    });
+  } catch (e) {
+    console.error('Failed to load sources', e);
+  }
+});
