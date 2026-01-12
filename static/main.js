@@ -123,17 +123,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Please select one or more sources.');
         return;
       }
+      // Open placeholder tabs synchronously to avoid popup blocking
+      const tabs = selected.map(() => window.open('', '_blank', 'noopener'));
       try {
         const promises = selected.map(s =>
           fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(s)}&q=${encodeURIComponent(q)}`)
             .then(r => r.json())
         );
         const results = await Promise.all(promises);
-        for (const res of results) {
-          if (res && res.url) window.open(res.url, '_blank', 'noopener');
+        for (let i = 0; i < results.length; i++) {
+          const res = results[i];
+          const tab = tabs[i];
+          if (res && res.url) {
+            try {
+              if (tab) tab.location = res.url; else window.open(res.url, '_blank', 'noopener');
+            } catch (e) {
+              if (tab) tab.close();
+              window.open(res.url, '_blank', 'noopener');
+            }
+          } else {
+            if (tab) tab.close();
+          }
         }
       } catch (e) {
         console.error('Error opening source searches', e);
+        for (const t of tabs) if (t) t.close();
         alert('Could not open one or more source searches');
       }
     });
