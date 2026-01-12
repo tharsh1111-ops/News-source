@@ -113,6 +113,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       localStorage.setItem(STORAGE_SELECTED, JSON.stringify(sel));
     });
 
+    // select all button
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener('click', () => {
+        for (const opt of Array.from(srcEl.options)) opt.selected = true;
+        const sel = Array.from(srcEl.selectedOptions).map(o => o.value);
+        localStorage.setItem(STORAGE_SELECTED, JSON.stringify(sel));
+      });
+    }
+
     populateSourcesForCategory();
 
     document.getElementById('openSourceBtn').addEventListener('click', async () => {

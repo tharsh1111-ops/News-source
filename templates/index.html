@@ -36,8 +36,11 @@
         <div class="source-controls">
           <select id="sourceCategory"></select>
             <select id="sourceSelect" multiple size="6" aria-label="Select one or more sources"></select>
-            <button id="openSourceBtn">Open Selected Sources</button>
-            <small style="margin-left:8px;color:#666">(select multiple with Ctrl/Cmd or Shift)</small>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button id="selectAllBtn">Select All</button>
+              <button id="openSourceBtn">Open Selected Sources</button>
+              <small style="margin-left:8px;color:#666">(use Ctrl/Cmd or Shift; or click "Select All")</small>
+            </div>
         </div>
       </section>
 
