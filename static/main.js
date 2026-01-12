@@ -64,7 +64,7 @@ document.getElementById('topBtn').addEventListener('click', async () => {
 // Load top stories on first load
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('topBtn').click();
-  // populate sources
+  // populate sources with persistence
   try {
     const sources = await fetchSources();
     const catEl = document.getElementById('sourceCategory');
@@ -76,6 +76,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       opt.textContent = cat;
       catEl.appendChild(opt);
     }
+
+    const STORAGE_CAT = 'news_source_category';
+    const STORAGE_SELECTED = 'news_source_selected';
+    const savedCat = localStorage.getItem(STORAGE_CAT);
+    const savedSelected = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || '[]');
+
+    if (savedCat && Array.from(catEl.options).some(o => o.value === savedCat)) {
+      catEl.value = savedCat;
+    }
+
     function populateSourcesForCategory() {
       const cat = catEl.value;
       const list = sources[cat] || [];
@@ -84,10 +94,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const o = document.createElement('option');
         o.value = s;
         o.textContent = s;
+        if (savedSelected.includes(s)) o.selected = true;
         srcEl.appendChild(o);
       }
+      const currentSelected = Array.from(srcEl.selectedOptions).map(o => o.value);
+      localStorage.setItem(STORAGE_SELECTED, JSON.stringify(currentSelected));
     }
-    catEl.addEventListener('change', populateSourcesForCategory);
+
+    // when category changes, persist and repopulate
+    catEl.addEventListener('change', () => {
+      localStorage.setItem(STORAGE_CAT, catEl.value);
+      populateSourcesForCategory();
+    });
+
+    // when selection changes, persist
+    srcEl.addEventListener('change', () => {
+      const sel = Array.from(srcEl.selectedOptions).map(o => o.value);
+      localStorage.setItem(STORAGE_SELECTED, JSON.stringify(sel));
+    });
+
     populateSourcesForCategory();
 
     document.getElementById('openSourceBtn').addEventListener('click', async () => {
@@ -99,7 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       try {
-        // fetch each source URL and open in a new tab
         const promises = selected.map(s =>
           fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(s)}&q=${encodeURIComponent(q)}`)
             .then(r => r.json())
