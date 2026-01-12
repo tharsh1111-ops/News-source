@@ -245,6 +245,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // Clear saved selections (helpful for debugging cached numeric/legacy selections)
+    const clearBtn = document.getElementById('clearSelectionsBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        try {
+          localStorage.removeItem(STORAGE_CAT);
+          // remove per-category saved keys
+          Object.keys(localStorage).filter(k => k.startsWith(STORAGE_SELECTED)).forEach(k => localStorage.removeItem(k));
+          alert('Cleared saved selections. The source list will refresh.');
+          populateSourcesForCategory();
+          // force UI refresh
+          location.reload();
+        } catch (e) {
+          console.error('Failed to clear selections', e);
+          alert('Failed to clear selections');
+        }
+      });
+    }
+
     // open selected sources immediately on double-click (convenience)
     srcEl.addEventListener('dblclick', () => {
       const category = catEl.value;
