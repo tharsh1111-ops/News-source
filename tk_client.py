@@ -232,7 +232,11 @@ class TkClient:
                 continue
             query = build_query(keyword, date_val, '')
             final_url = route_query(query, url_template)
-            webbrowser.open(final_url)
+            # open in a new browser tab when possible
+            try:
+                webbrowser.open(final_url, new=2)
+            except Exception:
+                webbrowser.open(final_url)
 
     def export_current_rows_to_file(self):
         rows_data = []
