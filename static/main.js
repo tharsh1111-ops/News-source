@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const STORAGE_CAT = 'news_source_category';
     const STORAGE_SELECTED = 'news_source_selected';
     const savedCat = localStorage.getItem(STORAGE_CAT);
-    const savedSelected = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || '[]');
+    let savedSelected = JSON.parse(localStorage.getItem(STORAGE_SELECTED) || '[]');
+    if (!Array.isArray(savedSelected)) savedSelected = [];
 
     if (savedCat && Array.from(catEl.options).some(o => o.value === savedCat)) {
       catEl.value = savedCat;
@@ -90,11 +91,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cat = catEl.value;
       const list = Object.keys(sources[cat] || {});
       srcEl.innerHTML = '';
-      for (const s of list) {
+      // if savedSelected looks like indices (['0','1']), translate to names
+      const savedLooksNumeric = savedSelected.length && savedSelected.every(x => String(x).match(/^\d+$/));
+      for (let idx = 0; idx < list.length; idx++) {
+        const s = list[idx];
         const o = document.createElement('option');
         o.value = s;
         o.textContent = s;
-        if (savedSelected.includes(s)) o.selected = true;
+        if (savedLooksNumeric) {
+          if (savedSelected.includes(String(idx))) o.selected = true;
+        } else {
+          if (savedSelected.includes(s)) o.selected = true;
+        }
         srcEl.appendChild(o);
       }
       const currentSelected = Array.from(srcEl.selectedOptions).map(o => o.value);
@@ -141,13 +149,29 @@ document.addEventListener('DOMContentLoaded', async () => {
           return template.replace('{query}', encodeURIComponent(q));
         }).filter(Boolean);
 
+        console.log('Opening URLs for selected sources:', selected, urls);
+
         if (!urls.length) {
           alert('No URLs could be constructed for the selected sources.');
           return;
         }
 
-        // Open each URL synchronously within the user gesture
-        for (const url of urls) window.open(url, '_blank', 'noopener');
+        // Open placeholder tabs synchronously to avoid popup blocking, then set their locations
+        const tabs = [];
+        for (let i = 0; i < urls.length; i++) {
+          const t = window.open('about:blank', '_blank', 'noopener');
+          tabs.push(t);
+        }
+        for (let i = 0; i < urls.length; i++) {
+          const url = urls[i];
+          const tab = tabs[i];
+          try {
+            if (tab) tab.location = url; else window.open(url, '_blank', 'noopener');
+          } catch (e) {
+            if (tab) tab.close();
+            window.open(url, '_blank', 'noopener');
+          }
+        }
       } catch (e) {
         console.error('Error opening source searches', e);
         alert('Could not open one or more source searches');
