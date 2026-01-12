@@ -87,6 +87,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       catEl.value = savedCat;
     }
 
+    // map to track previous selections per category so we can detect newly-added selections
+    const prevSelections = {};
+
     function populateSourcesForCategory() {
       const cat = catEl.value;
       const list = Object.keys(sources[cat] || {});
@@ -113,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       const currentSelected = Array.from(srcEl.selectedOptions).map(o => o.value);
       localStorage.setItem(STORAGE_SELECTED + '_' + cat, JSON.stringify(currentSelected));
+      prevSelections[cat] = currentSelected.slice();
     }
 
     // when category changes, persist and repopulate
@@ -123,8 +127,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // when selection changes, persist per-category
     srcEl.addEventListener('change', () => {
+      const cat = catEl.value;
       const sel = Array.from(srcEl.selectedOptions).map(o => o.value);
-      localStorage.setItem(STORAGE_SELECTED + '_' + catEl.value, JSON.stringify(sel));
+      // persist
+      localStorage.setItem(STORAGE_SELECTED + '_' + cat, JSON.stringify(sel));
+      // find newly added selections and open them immediately
+      const prev = prevSelections[cat] || [];
+      const added = sel.filter(s => !prev.includes(s));
+      if (added.length) {
+        try {
+          const q = document.getElementById('q').value.trim() || '';
+          const urls = added.map(s => {
+            const template = (sources[cat] || {})[s];
+            if (!template) return null;
+            return template.replace('{query}', encodeURIComponent(q));
+          }).filter(Boolean);
+          const tabs = [];
+          for (let i = 0; i < urls.length; i++) tabs.push(window.open('about:blank', '_blank', 'noopener'));
+          for (let i = 0; i < urls.length; i++) {
+            const tab = tabs[i];
+            const url = urls[i];
+            try {
+              if (tab) tab.location = url; else window.open(url, '_blank', 'noopener');
+            } catch (e) {
+              if (tab) tab.close();
+              window.open(url, '_blank', 'noopener');
+            }
+          }
+        } catch (e) {
+          console.error('Error opening newly selected sources', e);
+        }
+      }
+      prevSelections[cat] = sel.slice();
     });
 
     // select all button
@@ -181,6 +215,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) {
         console.error('Error opening source searches', e);
         alert('Could not open one or more source searches');
+      }
+    });
+
+    // Open selected sources in the Link Hub (reliable fallback for popup-blocking)
+    document.getElementById('openSourceHubBtn').addEventListener('click', () => {
+      const category = catEl.value;
+      const q = document.getElementById('q').value.trim() || '';
+      const selected = Array.from(srcEl.selectedOptions).map(o => o.value);
+      if (!selected.length) {
+        alert('Please select one or more sources.');
+        return;
+      }
+      const urls = selected.map(s => {
+        const template = (sources[category] || {})[s];
+        if (!template) return null;
+        return template.replace('{query}', encodeURIComponent(q));
+      }).filter(Boolean);
+      if (!urls.length) {
+        alert('No URLs could be constructed for the selected sources.');
+        return;
+      }
+      // encode as fragment so server isn't involved; link_hub.html reads the fragment
+      const payload = encodeURIComponent(JSON.stringify(urls));
+      const hub = window.open('/static/link_hub.html#' + payload, '_blank');
+      if (!hub) {
+        // final fallback: open hub in same tab
+        window.location.href = '/static/link_hub.html#' + payload;
       }
     });
 
