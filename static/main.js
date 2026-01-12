@@ -91,22 +91,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cat = catEl.value;
       const list = Object.keys(sources[cat] || {});
       srcEl.innerHTML = '';
-      // if savedSelected looks like indices (['0','1']), translate to names
-      const savedLooksNumeric = savedSelected.length && savedSelected.every(x => String(x).match(/^\d+$/));
+      // load saved selections fresh for this category (fallback to legacy key)
+      let savedSelectedNow = [];
+      try {
+        savedSelectedNow = JSON.parse(localStorage.getItem(STORAGE_SELECTED + '_' + cat) || localStorage.getItem(STORAGE_SELECTED) || '[]');
+      } catch (e) {
+        savedSelectedNow = [];
+      }
+      const savedLooksNumeric = savedSelectedNow.length && savedSelectedNow.every(x => String(x).match(/^\d+$/));
       for (let idx = 0; idx < list.length; idx++) {
         const s = list[idx];
         const o = document.createElement('option');
         o.value = s;
         o.textContent = s;
         if (savedLooksNumeric) {
-          if (savedSelected.includes(String(idx))) o.selected = true;
+          if (savedSelectedNow.includes(String(idx))) o.selected = true;
         } else {
-          if (savedSelected.includes(s)) o.selected = true;
+          if (savedSelectedNow.includes(s)) o.selected = true;
         }
         srcEl.appendChild(o);
       }
       const currentSelected = Array.from(srcEl.selectedOptions).map(o => o.value);
-      localStorage.setItem(STORAGE_SELECTED, JSON.stringify(currentSelected));
+      localStorage.setItem(STORAGE_SELECTED + '_' + cat, JSON.stringify(currentSelected));
     }
 
     // when category changes, persist and repopulate
@@ -115,10 +121,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       populateSourcesForCategory();
     });
 
-    // when selection changes, persist
+    // when selection changes, persist per-category
     srcEl.addEventListener('change', () => {
       const sel = Array.from(srcEl.selectedOptions).map(o => o.value);
-      localStorage.setItem(STORAGE_SELECTED, JSON.stringify(sel));
+      localStorage.setItem(STORAGE_SELECTED + '_' + catEl.value, JSON.stringify(sel));
     });
 
     // select all button
@@ -127,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       selectAllBtn.addEventListener('click', () => {
         for (const opt of Array.from(srcEl.options)) opt.selected = true;
         const sel = Array.from(srcEl.selectedOptions).map(o => o.value);
-        localStorage.setItem(STORAGE_SELECTED, JSON.stringify(sel));
+        localStorage.setItem(STORAGE_SELECTED + '_' + catEl.value, JSON.stringify(sel));
       });
     }
 
@@ -175,6 +181,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) {
         console.error('Error opening source searches', e);
         alert('Could not open one or more source searches');
+      }
+    });
+
+    // open selected sources immediately on double-click (convenience)
+    srcEl.addEventListener('dblclick', () => {
+      const category = catEl.value;
+      const q = document.getElementById('q').value.trim() || '';
+      const selected = Array.from(srcEl.selectedOptions).map(o => o.value);
+      if (!selected.length) return;
+      try {
+        const urls = selected.map(s => {
+          const template = (sources[category] || {})[s];
+          if (!template) return null;
+          return template.replace('{query}', encodeURIComponent(q));
+        }).filter(Boolean);
+
+        // open synchronously using placeholder tabs to avoid popup blocking
+        const tabs = [];
+        for (let i = 0; i < urls.length; i++) tabs.push(window.open('about:blank', '_blank', 'noopener'));
+        for (let i = 0; i < urls.length; i++) {
+          const tab = tabs[i];
+          const url = urls[i];
+          try {
+            if (tab) tab.location = url; else window.open(url, '_blank', 'noopener');
+          } catch (e) {
+            if (tab) tab.close();
+            window.open(url, '_blank', 'noopener');
+          }
+        }
+      } catch (e) {
+        console.error('Error opening on double-click', e);
       }
     });
   } catch (e) {
