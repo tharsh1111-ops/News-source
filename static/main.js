@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function populateSourcesForCategory() {
       const cat = catEl.value;
-      const list = sources[cat] || [];
+      const list = Object.keys(sources[cat] || {});
       srcEl.innerHTML = '';
       for (const s of list) {
         const o = document.createElement('option');
@@ -133,31 +133,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Please select one or more sources.');
         return;
       }
-      // Open placeholder tabs synchronously to avoid popup blocking
-      const tabs = selected.map(() => window.open('', '_blank', 'noopener'));
       try {
-        const promises = selected.map(s =>
-          fetch(`/api/source-search?category=${encodeURIComponent(category)}&source=${encodeURIComponent(s)}&q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-        );
-        const results = await Promise.all(promises);
-        for (let i = 0; i < results.length; i++) {
-          const res = results[i];
-          const tab = tabs[i];
-          if (res && res.url) {
-            try {
-              if (tab) tab.location = res.url; else window.open(res.url, '_blank', 'noopener');
-            } catch (e) {
-              if (tab) tab.close();
-              window.open(res.url, '_blank', 'noopener');
-            }
-          } else {
-            if (tab) tab.close();
-          }
+        // build URLs synchronously from the templates returned in `sources`
+        const urls = selected.map(s => {
+          const template = (sources[category] || {})[s];
+          if (!template) return null;
+          return template.replace('{query}', encodeURIComponent(q));
+        }).filter(Boolean);
+
+        if (!urls.length) {
+          alert('No URLs could be constructed for the selected sources.');
+          return;
         }
+
+        // Open each URL synchronously within the user gesture
+        for (const url of urls) window.open(url, '_blank', 'noopener');
       } catch (e) {
         console.error('Error opening source searches', e);
-        for (const t of tabs) if (t) t.close();
         alert('Could not open one or more source searches');
       }
     });

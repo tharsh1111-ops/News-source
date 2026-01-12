@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 import requests
-from news_source import list_sources, get_search_url
+from news_source import list_sources, list_sources_full, get_search_url
 
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 
@@ -85,7 +85,8 @@ def everything(q: str, language: Optional[str] = None, from_param: Optional[str]
 @app.get("/api/sources")
 def api_list_sources():
     """Return available categories and source names (link-only mapping available via `/api/source-search`)."""
-    return JSONResponse(content=list_sources())
+    # return full mapping so the frontend can build search URLs synchronously
+    return JSONResponse(content=list_sources_full())
 
 
 @app.get("/api/source-search")

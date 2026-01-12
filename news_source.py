@@ -132,6 +132,14 @@ def list_sources() -> Dict[str, Any]:
     return {cat: list(sources.keys()) for cat, sources in NEWS_SOURCES.items()}
 
 
+def list_sources_full() -> Dict[str, Dict[str, str]]:
+    """Return the full mapping of categories -> {source: url_template}.
+
+    Useful for clients that want to format URLs locally to avoid extra server round-trips.
+    """
+    return NEWS_SOURCES
+
+
 def get_search_url(category: str, source: str, query: str) -> str:
     """Return a formatted search URL for the given source and query.
 
